@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>妍欣老師 X 資訊教室小天地 ✨</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts 可愛圓體字型 (Zen Maru Gothic & Noto Sans TC) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- 引入 Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- 引入 PapaParse 用於解析 Google Sheet CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Zen Maru Gothic"', '"Noto Sans TC"', 'sans-serif'],
+                    },
+                    colors: {
+                        cream: '#FFFDF7',
+                        pastelPink: '#FFE4E6',
+                        pastelYellow: '#FEF3C7',
+                        pastelBlue: '#E0F2FE',
+                        pastelGreen: '#DCFCE7',
+                        pastelPurple: '#F3E8FF',
+                        cocoa: '#5C4B51',
+                        coral: '#FF758F',
+                    },
+                    boxShadow: {
+                        'cute': '0 6px 0px rgba(92, 75, 81, 0.12)',
+                        'cute-hover': '0 9px 0px rgba(92, 75, 81, 0.16)',
+                        'cute-sm': '0 4px 0px rgba(92, 75, 81, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 自訂可愛波點背景與動畫 */
+        body {
+            background-color: #FFFDF7;
+            background-image: radial-gradient(#FBCFE8 1.5px, transparent 1.5px), radial-gradient(#FDE68A 1.5px, #FFFDF7 1.5px);
+            background-size: 36px 36px;
+            background-position: 0 0, 18px 18px;
+            color: #5C4B51;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(2deg); }
+        }
+
+        .animate-float {
+            animation: float 3.5s ease-in-out infinite;
+        }
+
+        .card-bounce {
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .card-bounce:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-bounce:active {
+            transform: translateY(2px);
+        }
+
+        /* 隱藏捲軸但保留功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-pink-200 selection:text-cocoa">
+
+    <!-- 頂部可愛導覽裝飾條 -->
+    <div class="w-full h-3 bg-gradient-to-r from-pink-300 via-amber-200 to-sky-300"></div>
+
+    <!-- 主容器 -->
+    <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+        
+        <!-- 頁首區塊 (Header) -->
+        <header class="relative bg-white/90 backdrop-blur-sm border-4 border-pink-200 rounded-[2rem] p-6 sm:p-8 mb-8 shadow-cute text-center overflow-hidden">
+            <!-- 背景可愛裝飾圖示 -->
+            <div class="hidden sm:flex absolute top-4 left-6 text-pink-300 animate-float">
+                <i data-lucide="cloud" class="w-12 h-12 fill-pink-100"></i>
+            </div>
+            <div class="hidden sm:flex absolute bottom-4 right-8 text-amber-300 animate-float" style="animation-delay: 1s;">
+                <i data-lucide="sparkles" class="w-10 h-10 fill-amber-100"></i>
+            </div>
+            <div class="hidden md:flex absolute top-6 right-16 text-sky-300 animate-float" style="animation-delay: 0.5s;">
+                <i data-lucide="monitor-heart" class="w-9 h-9"></i>
+            </div>
+
+            <!-- 教師小徽章 -->
+            <div class="inline-flex items-center gap-2 bg-amber-100 text-amber-800 border-2 border-amber-300 px-4 py-1.5 rounded-full text-sm font-bold mb-3 shadow-sm">
+                <span>💻 快樂學習・創意無限</span>
+            </div>
+
+            <!-- 主標題 -->
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-black tracking-wide text-cocoa mb-3 flex flex-wrap items-center justify-center gap-2">
+                <span class="text-coral">妍欣老師</span>
+                <span class="inline-block bg-pink-100 text-pink-600 px-3 py-0.5 rounded-2xl text-2xl sm:text-3xl border-2 border-pink-300 transform -rotate-3">X</span>
+                <span>資訊教室小天地</span>
+            </h1>
+
+            <!-- 副標題與小語 -->
+            <p class="text-base sm:text-lg text-cocoa/80 max-w-2xl mx-auto font-medium mb-5">
+                歡迎來到資訊課！這裡整理了上課常用的學習網站、程式積木與數位小工具，點選下方卡片就能馬上出發囉 🚀
+            </p>
+
+            <!-- 教師後台入口按鈕 -->
+            <div class="flex items-center justify-center">
+                <button onclick="openTeacherModal()" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-50 hover:bg-pink-100 border-2 border-pink-200 text-pink-700 text-xs sm:text-sm font-bold shadow-xs transition cursor-pointer">
+                    <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                    <span>教師後台</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 搜尋與分類篩選區 -->
+        <section class="mb-8 space-y-4">
+            <!-- 搜尋框 -->
+            <div class="max-w-md mx-auto relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-pink-400">
+                    <i data-lucide="search" class="w-5 h-5"></i>
+                </div>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="搜尋網站名稱、關鍵字..." 
+                    class="w-full pl-11 pr-10 py-3 bg-white border-3 border-pink-200 rounded-full text-cocoa placeholder-cocoa/40 font-bold focus:outline-none focus:border-coral focus:ring-4 focus:ring-pink-100 shadow-cute-sm transition"
+                >
+                <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-4 flex items-center text-cocoa/40 hover:text-coral cursor-pointer">
+                    <i data-lucide="x-circle" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- 網站卡片網格區 -->
+        <section id="cardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 載入中骨架畫面 -->
+            <div class="col-span-full text-center py-12">
+                <div class="inline-block p-4 rounded-full bg-pink-100 text-coral mb-3 animate-bounce">
+                    <i data-lucide="sparkles" class="w-8 h-8"></i>
+                </div>
+                <p class="text-lg font-bold text-cocoa/70">正在為你準備可愛的學習傳送門...</p>
+            </div>
+        </section>
+
+        <!-- 查無資料時的可愛提示 -->
+        <div id="emptyState" class="hidden text-center py-16 bg-white/80 border-4 border-dashed border-pink-200 rounded-[2rem]">
+            <div class="text-5xl mb-4">🐰🔍</div>
+            <h3 class="text-xl font-bold text-cocoa mb-2">找不到符合的網站耶！</h3>
+            <p class="text-cocoa/70 mb-4">試試看別的關鍵字，或是切換回「全部網站」看看吧～</p>
+            <button onclick="resetFilters()" class="px-6 py-2.5 bg-coral text-white font-bold rounded-full shadow-cute-sm hover:bg-pink-500 transition cursor-pointer">
+                顯示全部網站
+            </button>
+        </div>
+
+    </main>
+
+    <!-- 頁尾 (Footer) -->
+    <footer class="mt-12 py-6 bg-white/80 border-t-4 border-pink-100 text-center">
+        <div class="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm font-bold text-cocoa/70">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">🌸</span>
+                <span>妍欣老師 X 資訊教室小天地</span>
+            </div>
+            <div class="text-xs text-cocoa/60">
+                資料自動同步自 Google 試算表 • 快樂學資訊，每天進步一點點 ✨
+            </div>
+        </div>
+    </footer>
+
+    <!-- 教師後台驗證與管理視窗 (Modal) -->
+    <div id="teacherModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-cocoa/40 backdrop-blur-xs p-4">
+        <div class="bg-white border-4 border-pink-300 rounded-[2rem] max-w-lg w-full p-6 sm:p-8 shadow-2xl relative animate-fade-in">
+            <button onclick="closeTeacherModal()" class="absolute top-5 right-5 p-2 rounded-full bg-pink-100 text-coral hover:bg-pink-200 transition cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <!-- 步驟一：密碼驗證畫面 -->
+            <div id="teacherLoginView" class="text-center py-2">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-pink-100 text-coral mb-3">
+                    <i data-lucide="key-round" class="w-7 h-7"></i>
+                </div>
+                <h2 class="text-xl font-black text-cocoa mb-1">教師後台驗證</h2>
+                <p class="text-sm text-cocoa/70 mb-5">請輸入妍欣老師專屬管理密碼 🔐</p>
+
+                <form onsubmit="verifyTeacherPassword(event)" class="max-w-xs mx-auto space-y-3">
+                    <input 
+                        type="password" 
+                        id="teacherPasswordInput" 
+                        placeholder="請輸入密碼" 
+                        maxlength="10"
+                        class="w-full px-4 py-2.5 text-center tracking-widest text-lg bg-pink-50/50 border-2 border-pink-200 rounded-full text-cocoa font-bold focus:outline-none focus:border-coral focus:ring-4 focus:ring-pink-100 transition"
+                    >
+                    <p id="passwordErrorMsg" class="hidden text-xs font-bold text-rose-500">
+                        密碼錯誤喔！請再試一次 🙈
+                    </p>
+                    <button type="submit" class="w-full py-2.5 bg-coral text-white font-bold rounded-full shadow-cute-sm hover:bg-pink-500 transition cursor-pointer">
+                        解鎖進入後台 ✨
+                    </button>
+                </form>
+            </div>
+
+            <!-- 步驟二：解鎖後的教師後台管理面板 -->
+            <div id="teacherPanelView" class="hidden">
+                <div class="flex items-center gap-2 text-coral font-black text-xl mb-4">
+                    <i data-lucide="settings" class="w-6 h-6"></i>
+                    <h2>妍欣老師・後台管理中心</h2>
+                </div>
+
+                <!-- 同步狀態與操作按鈕區 -->
+                <div class="bg-cream border-2 border-pink-200 rounded-2xl p-4 mb-5 space-y-3">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <span class="text-xs font-bold text-cocoa/70">目前連線狀態：</span>
+                        <div id="syncStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border-2 border-sky-200 text-sky-700 text-xs font-bold">
+                            <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                            <span id="syncStatusText">正在連線至 Google 試算表...</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        <button onclick="fetchGoogleSheetData(true)" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 text-emerald-700 text-xs sm:text-sm font-bold transition cursor-pointer">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            <span>重新整理資料</span>
+                        </button>
+
+                        <a href="https://docs.google.com/spreadsheets/d/1Tg312EhMuf1-r9bXijtzw4srZQSBW3ytgiHZrBPmy04/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 text-purple-700 text-xs sm:text-sm font-bold transition">
+                            <i data-lucide="table" class="w-4 h-4"></i>
+                            <span>開啟來源試算表</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 試算表格式說明 -->
+                <div class="space-y-3 text-sm text-cocoa/90 leading-relaxed">
+                    <div class="flex items-center gap-1.5 font-bold text-amber-700">
+                        <i data-lucide="help-circle" class="w-4 h-4"></i>
+                        <h3>試算表格式與更新說明</h3>
+                    </div>
+                    <p class="text-xs text-cocoa/75">
+                        確認試算表權限設為<strong>「知道連結的任何人均可檢視」</strong>，修改試算表後點擊上方「重新整理資料」即可同步。
+                    </p>
+                    <div class="overflow-x-auto bg-pink-50/70 p-3 rounded-xl border border-pink-200">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="border-b border-pink-200 text-pink-700">
+                                    <th class="py-1 px-2">年級</th>
+                                    <th class="py-1 px-2">課程名稱</th>
+                                    <th class="py-1 px-2">網址</th>
+                                    <th class="py-1 px-2">顯示</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-cocoa/80">
+                                <tr>
+                                    <td class="py-1 px-2">三年級</td>
+                                    <td class="py-1 px-2">Scratch 創意程式</td>
+                                    <td class="py-1 px-2">https://scratch...</td>
+                                    <td class="py-1 px-2">顯示 / TRUE</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-center justify-between">
+                    <button onclick="lockTeacherPanel()" class="text-xs font-bold text-cocoa/50 hover:text-coral transition cursor-pointer">
+                        🔒 登出並鎖定後台
+                    </button>
+                    <button onclick="closeTeacherModal()" class="px-6 py-2 bg-coral text-white text-sm font-bold rounded-full shadow-cute-sm hover:bg-pink-500 transition cursor-pointer">
+                        完成 ✨
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 邏輯區 -->
+    <script>
+        // 教師後台密碼與解鎖狀態
+        const TEACHER_PASSWORD = '0916';
+        let isTeacherAuthenticated = false;
+
+        // 您的 Google 試算表 ID
+        const SHEET_ID = '1Tg312EhMuf1-r9bXijtzw4srZQSBW3ytgiHZrBPmy04';
+        // Google 試算表公開 CSV 匯出網址
+        const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+        // 可愛馬卡龍色系主題配置 (循環套用到不同分類與卡片)
+        const PASTEL_THEMES = [
+            { bg: 'bg-pink-50', border: 'border-pink-200', badge: 'bg-pink-100 text-pink-700 border-pink-300', btn: 'bg-pink-400 hover:bg-pink-500', iconBg: 'bg-pink-100 text-pink-500' },
+            { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-800 border-amber-300', btn: 'bg-amber-400 hover:bg-amber-500', iconBg: 'bg-amber-100 text-amber-600' },
+            { bg: 'bg-sky-50', border: 'border-sky-200', badge: 'bg-sky-100 text-sky-700 border-sky-300', btn: 'bg-sky-400 hover:bg-sky-500', iconBg: 'bg-sky-100 text-sky-500' },
+            { bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700 border-emerald-300', btn: 'bg-emerald-400 hover:bg-emerald-500', iconBg: 'bg-emerald-100 text-emerald-600' },
+            { bg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-700 border-purple-300', btn: 'bg-purple-400 hover:bg-purple-500', iconBg: 'bg-purple-100 text-purple-500' },
+            { bg: 'bg-orange-50', border: 'border-orange-200', badge: 'bg-orange-100 text-orange-700 border-orange-300', btn: 'bg-orange-400 hover:bg-orange-500', iconBg: 'bg-orange-100 text-orange-500' }
+        ];
+
+        // 當無法連線或試算表為空時的預設資訊教室範例資料
+        const FALLBACK_DATA = [
+            {
+                grade: '三年級',
+                title: 'Scratch 創意程式設計',
+                url: 'https://scratch.mit.edu/',
+                emoji: '🐱'
+            },
+            {
+                grade: '四年級',
+                title: 'Code.org 程式一小時',
+                url: 'https://code.org/',
+                emoji: '🎮'
+            },
+            {
+                grade: '三年級',
+                title: '中英打字小高手',
+                url: 'https://www.typingclub.com/',
+                emoji: '⌨️'
+            },
+            {
+                grade: '五年級',
+                title: 'Canva 平面設計魔法',
+                url: 'https://www.canva.com/',
+                emoji: '🎨'
+            },
+            {
+                grade: '六年級',
+                title: 'Quick, Draw! AI 猜畫',
+                url: 'https://quickdraw.withgoogle.com/',
+                emoji: '🤖'
+            },
+            {
+                grade: '四年級',
+                title: '均一教育平台',
+                url: 'https://www.junyiacademy.org/',
+                emoji: '📚'
+            }
+        ];
+
+        // 全域狀態
+        let allLinks = [];
+        let currentGrade = '全部';
+        let currentSearch = '';
+        let gradeColorMap = {};
+
+        // 初始化頁面
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            setupSearchListener();
+            fetchGoogleSheetData(false);
+        });
+
+        // 設定搜尋框監聽器
+        function setupSearchListener() {
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+
+            searchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value.trim().toLowerCase();
+                if (currentSearch.length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+                renderCards();
+            });
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.value = '';
+            currentSearch = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            renderCards();
+        }
+
+        function resetFilters() {
+            currentGrade = '全部';
+            clearSearch();
+            renderCards();
+        }
+
+        // 抓取 Google 試算表資料
+        function fetchGoogleSheetData(isManualRefresh = false) {
+            updateSyncStatus('loading', isManualRefresh ? '正在重新同步試算表...' : '正在連線至 Google 試算表...');
+
+            // 加上時間戳記避免快取
+            const urlWithCacheBuster = `${SHEET_CSV_URL}&_t=${Date.now()}`;
+
+            Papa.parse(urlWithCacheBuster, {
+                download: true,
+                header: false, // 先以陣列讀取，方便智慧判斷標題列或無標題列
+                skipEmptyLines: true,
+                complete: function(results) {
+                    try {
+                        const rows = results.data;
+                        if (!rows || rows.length === 0) {
+                            throw new Error('試算表目前沒有資料');
+                        }
+
+                        const parsedItems = parseSheetRows(rows);
+                        if (parsedItems.length === 0) {
+                            throw new Error('試算表內目前沒有設為「顯示」的有效課程');
+                        }
+
+                        allLinks = parsedItems;
+                        assignCategoryColors();
+                        renderCards();
+                        updateSyncStatus('success', `已同步試算表（共 ${allLinks.length} 個課程）`);
+                    } catch (err) {
+                        console.warn('解析試算表發生問題，切換至預設資料:', err);
+                        useFallbackData('試算表目前無顯示資料或格式未設定，已載入範例課程');
+                    }
+                },
+                error: function(err) {
+                    console.warn('讀取 Google 試算表失敗:', err);
+                    useFallbackData('無法連線至試算表（請確認共用權限），目前顯示範例課程');
+                }
+            });
+        }
+
+        // 智慧解析試算表各欄位 (支援「年級」、「課程名稱」、「網址」、「顯示」)
+        function parseSheetRows(rows) {
+            const items = [];
+            if (rows.length === 0) return items;
+
+            // 檢查第一列是否為標題列
+            const firstRow = rows[0].map(cell => (cell || '').toString().trim().toLowerCase());
+            const headerKeywords = ['分類', '年級', '類別', '名稱', '標題', '網站', '課程', '網址', '連結', '顯示', '狀態', '公開', 'url', 'link', 'title', 'grade', 'category', 'name', 'show', 'visible'];
+            const hasHeader = firstRow.some(cell => headerKeywords.some(kw => cell.includes(kw)));
+
+            let colMap = { grade: 0, title: 1, url: 2, visible: -1, emoji: -1 };
+            let startRowIndex = 0;
+
+            if (hasHeader) {
+                startRowIndex = 1;
+                firstRow.forEach((colName, idx) => {
+                    if (colName.includes('年級') || colName.includes('分類') || colName.includes('類別') || colName.includes('grade') || colName.includes('category')) {
+                        colMap.grade = idx;
+                    } else if (colName.includes('課程') || colName.includes('名稱') || colName.includes('標題') || colName.includes('網站') || colName.includes('title') || colName.includes('name')) {
+                        colMap.title = idx;
+                    } else if (colName.includes('網址') || colName.includes('連結') || colName.includes('url') || colName.includes('link') || colName.includes('http')) {
+                        colMap.url = idx;
+                    } else if (colName.includes('顯示') || colName.includes('狀態') || colName.includes('公開') || colName.includes('上架') || colName.includes('show') || colName.includes('visible')) {
+                        colMap.visible = idx;
+                    } else if (colName.includes('圖示') || colName.includes('icon') || colName.includes('emoji')) {
+                        colMap.emoji = idx;
+                    }
+                });
+            }
+
+            const defaultEmojis = ['🌟', '💻', '🎨', '🚀', '📚', '🎮', '🤖', '✨', '🌈', '🐱'];
+            const visibleTrueValues = ['顯示', '是', 'true', '1', 'y', 'yes', 'v', '✓', '✔', '公開', '上架'];
+            const visibleFalseValues = ['隱藏', '否', 'false', '0', 'n', 'no', 'x', '✕', '下架', '不顯示'];
+
+            for (let i = startRowIndex; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length === 0) continue;
+
+                // 判斷「顯示」欄位：決定是否要在網頁上呈現
+                if (colMap.visible !== -1) {
+                    const visRaw = (row[colMap.visible] || '').toString().trim().toLowerCase();
+                    // 若明確填寫隱藏/否/FALSE/0 等，或為空值（當有設定顯示欄位時），則跳過不呈現
+                    if (visibleFalseValues.includes(visRaw) || !visibleTrueValues.includes(visRaw)) {
+                        continue;
+                    }
+                } else {
+                    // 若無標題列但該列中有單獨寫「隱藏」或「FALSE」或「不顯示」的儲存格，也自動過濾
+                    const hasHideFlag = row.some(c => {
+                        const s = (c || '').toString().trim().toLowerCase();
+                        return ['隱藏', '不顯示', 'false', '下架'].includes(s);
+                    });
+                    if (hasHideFlag) continue;
+                }
+
+                // 找出該列中看起來像網址的欄位 (作為備援)
+                let detectedUrl = (row[colMap.url] || '').toString().trim();
+                if (!detectedUrl || (!detectedUrl.startsWith('http') && !detectedUrl.includes('.'))) {
+                    const urlCell = row.find(c => {
+                        const s = (c || '').toString().trim();
+                        return s.startsWith('http://') || s.startsWith('https://');
+                    });
+                    if (urlCell) detectedUrl = urlCell.toString().trim();
+                }
+
+                // 若仍沒有有效網址則跳過此列
+                if (!detectedUrl) continue;
+                if (!detectedUrl.startsWith('http://') && !detectedUrl.startsWith('https://')) {
+                    detectedUrl = 'https://' + detectedUrl;
+                }
+
+                // 取得年級與課程名稱，避免誤抓網址或「顯示/隱藏」狀態字眼
+                let rawGrade = (row[colMap.grade] || '').toString().trim();
+                let rawTitle = (row[colMap.title] || '').toString().trim();
+
+                if (rawGrade.startsWith('http') || visibleTrueValues.includes(rawGrade.toLowerCase())) rawGrade = '';
+                if (rawTitle.startsWith('http') || visibleTrueValues.includes(rawTitle.toLowerCase())) rawTitle = '';
+
+                // 若課程名稱為空，嘗試從同列其他非網址、非顯示狀態的欄位尋找
+                if (!rawTitle) {
+                    const nonUrlCells = row
+                        .map(c => (c || '').toString().trim())
+                        .filter(c => c && !c.startsWith('http') && c !== rawGrade && !visibleTrueValues.includes(c.toLowerCase()) && !visibleFalseValues.includes(c.toLowerCase()));
+                    if (nonUrlCells.length > 0) {
+                        rawTitle = nonUrlCells[0];
+                    }
+                }
+
+                const grade = rawGrade || '資訊課程';
+                const title = rawTitle || '精選學習課程';
+                const customEmoji = colMap.emoji !== -1 ? (row[colMap.emoji] || '').toString().trim() : '';
+                const emoji = customEmoji || defaultEmojis[items.length % defaultEmojis.length];
+
+                items.push({
+                    grade,
+                    title,
+                    url: detectedUrl,
+                    emoji
+                });
+            }
+
+            return items;
+        }
+
+        // 當試算表無法讀取時使用預設資料
+        function useFallbackData(message) {
+            allLinks = [...FALLBACK_DATA];
+            assignCategoryColors();
+            renderCards();
+            updateSyncStatus('warning', message);
+        }
+
+        // 更新教師後台同步狀態標籤
+        function updateSyncStatus(type, text) {
+            const badge = document.getElementById('syncStatusBadge');
+            const statusText = document.getElementById('syncStatusText');
+            if (!badge || !statusText) return;
+
+            statusText.textContent = text;
+            badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full border-2 text-xs font-bold';
+
+            const dot = badge.querySelector('span:first-child');
+            if (type === 'loading') {
+                badge.classList.add('bg-sky-50', 'border-sky-200', 'text-sky-700');
+                dot.className = 'w-2 h-2 rounded-full bg-sky-400 animate-ping';
+            } else if (type === 'success') {
+                badge.classList.add('bg-pink-50', 'border-pink-200', 'text-pink-700');
+                dot.className = 'w-2 h-2 rounded-full bg-pink-400';
+            } else {
+                badge.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-700');
+                dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+            }
+        }
+
+        // 為每個年級分配固定的可愛色彩主題
+        function assignCategoryColors() {
+            const grades = [...new Set(allLinks.map(item => item.grade))];
+            gradeColorMap = {};
+            grades.forEach((g, index) => {
+                gradeColorMap[g] = PASTEL_THEMES[index % PASTEL_THEMES.length];
+            });
+        }
+
+        // 渲染課程卡片（僅顯示年級、課程名稱、打開課程）
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            const filtered = allLinks.filter(item => {
+                const matchGrade = currentGrade === '全部' || item.grade === currentGrade;
+                const matchSearch = !currentSearch || 
+                    item.title.toLowerCase().includes(currentSearch) || 
+                    item.grade.toLowerCase().includes(currentSearch);
+                return matchGrade && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                container.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            container.innerHTML = filtered.map(item => {
+                const theme = gradeColorMap[item.grade] || PASTEL_THEMES[0];
+
+                return `
+                    <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" 
+                       class="group card-bounce bg-white border-4 ${theme.border} rounded-[2rem] p-6 shadow-cute hover:shadow-cute-hover flex flex-col justify-between relative overflow-hidden">
+                        
+                        <!-- 頂部圖示與年級標籤 -->
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-4">
+                                <div class="w-14 h-14 rounded-2xl ${theme.iconBg} flex items-center justify-center text-3xl shadow-xs group-hover:scale-110 transition-transform">
+                                    ${escapeHtml(item.emoji)}
+                                </div>
+                                <span class="px-3.5 py-1 rounded-full text-sm font-black border-2 ${theme.badge}">
+                                    ${escapeHtml(item.grade)}
+                                </span>
+                            </div>
+
+                            <!-- 課程名稱 -->
+                            <h2 class="text-xl sm:text-2xl font-black text-cocoa group-hover:text-coral transition-colors mb-5 line-clamp-2">
+                                ${escapeHtml(item.title)}
+                            </h2>
+                        </div>
+
+                        <!-- 底部打開課程按鈕 -->
+                        <div class="pt-3 border-t-2 border-dashed border-gray-100 flex items-center justify-end">
+                            <span class="w-full justify-center inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-base font-black ${theme.btn} shadow-xs group-hover:translate-x-0.5 transition-all">
+                                <span>打開課程</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </span>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // 教師後台 Modal 控制
+        function openTeacherModal() {
+            const modal = document.getElementById('teacherModal');
+            const loginView = document.getElementById('teacherLoginView');
+            const panelView = document.getElementById('teacherPanelView');
+            const errorMsg = document.getElementById('passwordErrorMsg');
+            const pwdInput = document.getElementById('teacherPasswordInput');
+
+            errorMsg.classList.add('hidden');
+            pwdInput.value = '';
+
+            if (isTeacherAuthenticated) {
+                loginView.classList.add('hidden');
+                panelView.classList.remove('hidden');
+            } else {
+                loginView.classList.remove('hidden');
+                panelView.classList.add('hidden');
+                setTimeout(() => pwdInput.focus(), 100);
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTeacherModal() {
+            const modal = document.getElementById('teacherModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function verifyTeacherPassword(e) {
+            e.preventDefault();
+            const pwdInput = document.getElementById('teacherPasswordInput');
+            const errorMsg = document.getElementById('passwordErrorMsg');
+
+            if (pwdInput.value === TEACHER_PASSWORD) {
+                isTeacherAuthenticated = true;
+                errorMsg.classList.add('hidden');
+                document.getElementById('teacherLoginView').classList.add('hidden');
+                document.getElementById('teacherPanelView').classList.remove('hidden');
+            } else {
+                errorMsg.classList.remove('hidden');
+                pwdInput.value = '';
+                pwdInput.focus();
+            }
+        }
+
+        function lockTeacherPanel() {
+            isTeacherAuthenticated = false;
+            document.getElementById('teacherPanelView').classList.add('hidden');
+            document.getElementById('teacherLoginView').classList.remove('hidden');
+            document.getElementById('teacherPasswordInput').value = '';
+        }
+
+        // 點擊 Modal 背景關閉
+        document.getElementById('teacherModal').addEventListener('click', (e) => {
+            if (e.target.id === 'teacherModal') {
+                closeTeacherModal();
+            }
+        });
+
+        // HTML 安全跳脫字元函式
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
